@@ -1,6 +1,39 @@
 <?php
 // $Id$
 
-function git_repo_hook_insert($node) {
-  print_r($node);
+function _git_repo_create($id) {
+  // Calculate path
+  $path="/home/cg2/htdocs/data/$id";
+
+  // Create path
+  if(!mkdir($path)) {
+    return;
+  }
+
+  // Change to path
+  if(!chdir($path)) {
+    return;
+  }
+
+  // Create repo
+  system("git init --bare");
+
+  // Say something
+  $t_args=array("%id"=>$id);
+  drupal_set_message(t('Git Repository %id has been created.', $t_args));
+}
+
+function git_repo_nodeapi($node, $op) {
+  // Only on insert
+  if($op!="insert") {
+    return;
+  }
+
+  // Only when content type is group
+  if($node->type!="group") {
+    return;
+  }
+
+  // Do the work
+  _git_repo_create($node->nid);
 }

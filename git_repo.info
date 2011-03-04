@@ -1,0 +1,4 @@
+; $Id$
+name = Git Repo
+description = Creates a git repo on creation of certain nodes
+core = 6.x

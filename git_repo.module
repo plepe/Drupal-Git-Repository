@@ -1,0 +1,6 @@
+<?php
+// $Id$
+
+function git_repo_hook_insert($node) {
+  print_r($node);
+}

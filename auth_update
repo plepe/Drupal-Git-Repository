@@ -35,11 +35,24 @@ foreach($p_files as $file) {
 
 file_put_contents($wiki_users, $ret);
 
-system("cat $wiki_users | cut -d: -f1-2 > $repo_dir/.htpasswd");
+$link=mysql_connect($mysql['host'], $mysql['user'], $mysql['passwd']);
+mysql_select_db($mysql['db']);
+
+$f=fopen("$repo_dir/.htpasswd", "w");
+$res=mysql_query("select name, pass from users");
+if(!$res) print mysql_error();
+while($elem=mysql_fetch_row($res)) {
+  fwrite($f, "$elem[0]:$elem[1]\n");
+}
+fclose($f);
 
 $f=fopen("$repo_dir/.htgroup", "w");
-$link=mysql_connect($mysql['host'], $mysql['user'], $mysql['passwd']);
-$res=mysql_query("select 'group' || nid, group_concat(users.name separator ' ') from og_uid left join users on og_uid.uid=users.uid group by nid");
+$res=mysql_query("select concat('group', nid), group_concat(users.name separator ' ') from og_uid left join users on og_uid.uid=users.uid group by nid");
+while($elem=mysql_fetch_row($res)) {
+  fwrite($f, "$elem[0]:$elem[1]\n");
+}
+
+$res=mysql_query("select 'tutor', group_concat(name separator ' ') from users_roles join users on users_roles.uid=users.uid where rid='5' group by rid");
 while($elem=mysql_fetch_row($res)) {
   fwrite($f, "$elem[0]:$elem[1]\n");
 }

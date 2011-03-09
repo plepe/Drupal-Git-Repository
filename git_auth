@@ -12,10 +12,28 @@
   # Require valid-user
 */
 
+// Config
+include_once "/home/cg2/htdocs/conf.php";
+
+// Connect to database
+$link=mysql_connect($mysql['host'], $mysql['user'], $mysql['passwd']);
+mysql_select_db($mysql['db']);
+
 // Read user/pass from stdin
 $stdin=fopen("php://stdin", "r");
 $user=trim(fgets($stdin));
 $pass=trim(fgets($stdin));
 fclose($stdin);
 
-exit(1); // no access
+// Check password to drupal-database
+$res=mysql_query("select * from users where name='$user'");
+if(!($elem=mysql_fetch_assoc($res))) {
+  exit(1);
+}
+
+// Check if password is correct
+if(md5($pass)!=$elem['pass']) {
+  exit(1);
+}
+
+exit(0); // you got it!

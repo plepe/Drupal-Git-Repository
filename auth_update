@@ -1,0 +1,35 @@
+#!/usr/bin/php
+<?
+include_once "/home/cg2/htdocs/conf.php";
+
+$p="/home/cg2/sec";
+// , "pruefer"
+$p_files=array("wiki_template", "hofrat_users", "|mysql -u{$mysql['user']} -p{$mysql['passwd']} {$mysql['db']} -B -e \"select name, pass, coalesce(profile_values.value, name), mail, 'user' from users left join profile_values on users.uid=profile_values.uid and profile_values.fid='3' where name regexp '^[0-9]{7}$'\" | sed \"s/\t/:/g\" | tail -n +2");
+$wiki_users="/home/cg2/htdocs/wiki/conf/users.auth.php";
+
+foreach($p_files as $file) {
+  if(substr($file, 0, 1)!="|") {
+    print (filesize("$p/$file")<10);
+    if(filesize("$p/$file")<10) {
+      print "$file empty!\n";
+      exit;
+    }
+  }
+}
+
+$ret="";
+foreach($p_files as $file) {
+  if(substr($file, 0, 1)=="|") {
+    $f=popen(substr($file, 1), "r");
+    while($r=fgets($f)) {
+      $ret.=$r;
+    }
+    pclose($f);
+  }
+  else {
+    $r=file_get_contents("$p/$file", "r");
+    $ret.=$r;
+  }
+}
+
+file_put_contents($wiki_users, $ret);

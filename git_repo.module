@@ -17,6 +17,7 @@ function _git_repo_create($id) {
 
   // Create repo
   system("git init --bare");
+  system("git update-server-info");
 
   // Create .htaccess-file
   $f=fopen("$path/.htaccess", "w");

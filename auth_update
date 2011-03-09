@@ -6,6 +6,7 @@ $p="/home/cg2/sec";
 // , "pruefer"
 $p_files=array("wiki_template", "hofrat_users", "|mysql -u{$mysql['user']} -p{$mysql['passwd']} {$mysql['db']} -B -e \"select name, pass, coalesce(profile_values.value, name), mail, 'user' from users left join profile_values on users.uid=profile_values.uid and profile_values.fid='3' where name regexp '^[0-9]{7}$'\" | sed \"s/\t/:/g\" | tail -n +2");
 $wiki_users="/home/cg2/htdocs/wiki/conf/users.auth.php";
+$repo_dir="/home/cg2/htdocs/data/";
 
 foreach($p_files as $file) {
   if(substr($file, 0, 1)!="|") {
@@ -33,3 +34,5 @@ foreach($p_files as $file) {
 }
 
 file_put_contents($wiki_users, $ret);
+
+system("cat $wiki_users | cut -d: -f1-2 > $repo_dir/.htpasswd");

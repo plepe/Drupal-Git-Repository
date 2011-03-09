@@ -1,0 +1,59 @@
+#!/usr/bin/php
+<?
+include_once "/home/cg2/htdocs/conf.php";
+
+$p="/home/cg2/sec";
+// , "pruefer"
+$p_files=array("wiki_template", "hofrat_users", "|mysql -u{$mysql['user']} -p{$mysql['passwd']} {$mysql['db']} -B -e \"select name, pass, coalesce(profile_values.value, name), mail, 'user' from users left join profile_values on users.uid=profile_values.uid and profile_values.fid='3' where name regexp '^[0-9]{7}$'\" | sed \"s/\t/:/g\" | tail -n +2");
+$wiki_users="/home/cg2/htdocs/wiki/conf/users.auth.php";
+$repo_dir="/home/cg2/htdocs/data/";
+
+foreach($p_files as $file) {
+  if(substr($file, 0, 1)!="|") {
+    print (filesize("$p/$file")<10);
+    if(filesize("$p/$file")<10) {
+      print "$file empty!\n";
+      exit;
+    }
+  }
+}
+
+$ret="";
+foreach($p_files as $file) {
+  if(substr($file, 0, 1)=="|") {
+    $f=popen(substr($file, 1), "r");
+    while($r=fgets($f)) {
+      $ret.=$r;
+    }
+    pclose($f);
+  }
+  else {
+    $r=file_get_contents("$p/$file", "r");
+    $ret.=$r;
+  }
+}
+
+file_put_contents($wiki_users, $ret);
+
+$link=mysql_connect($mysql['host'], $mysql['user'], $mysql['passwd']);
+mysql_select_db($mysql['db']);
+
+$f=fopen("$repo_dir/.htpasswd", "w");
+$res=mysql_query("select name, pass from users");
+if(!$res) print mysql_error();
+while($elem=mysql_fetch_row($res)) {
+  fwrite($f, "$elem[0]:$elem[1]\n");
+}
+fclose($f);
+
+$f=fopen("$repo_dir/.htgroup", "w");
+$res=mysql_query("select concat('group', nid), group_concat(users.name separator ' ') from og_uid left join users on og_uid.uid=users.uid group by nid");
+while($elem=mysql_fetch_row($res)) {
+  fwrite($f, "$elem[0]:$elem[1]\n");
+}
+
+$res=mysql_query("select 'tutor', group_concat(name separator ' ') from users_roles join users on users_roles.uid=users.uid where rid='5' group by rid");
+while($elem=mysql_fetch_row($res)) {
+  fwrite($f, "$elem[0]:$elem[1]\n");
+}
+fclose($f);

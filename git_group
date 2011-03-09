@@ -1,0 +1,43 @@
+#!/usr/bin/php
+<?
+/*
+  Add this line to the VirtualHost-Directive in apache-config:
+  # DefineExternalGroup cg2 pipe /home/cg2/bin/git_group
+
+  Create a .htaccess file in a git-repo:
+  # AuthType Basic
+  # AuthName "Group 22"
+  # AuthBasicProvider external
+  # AuthExternal cg2
+  # GroupExternal cg2
+  # Require group og_1234 tutor
+*/
+
+// Config
+include_once "/home/cg2/htdocs/conf.php";
+
+// Connect to database
+$link=mysql_connect($mysql['host'], $mysql['user'], $mysql['passwd']);
+mysql_select_db($mysql['db']);
+
+// Read user/required groups from stdin
+$stdin=fopen("php://stdin", "r");
+$user=trim(fgets($stdin));
+$groups=explode(" ", trim(fgets($stdin)));
+fclose($stdin);
+
+// Check if we are in matching organic group
+$res=mysql_query("select concat('og_', og_uid.nid) as name from users left join og_uid on users.uid=og_uid.uid where name='$user'");
+while($elem=mysql_fetch_assoc($res)) {
+  if(in_array($elem['name'], $groups))
+    exit(0);
+}
+
+// Check if we have matching role
+$res=mysql_query("select role.name from users join users_roles on users.uid=users_roles.uid join role on users_roles.rid=role.rid where users.name='$user'");
+while($elem=mysql_fetch_assoc($res)) {
+  if(in_array($elem['name'], $groups))
+    exit(0);
+}
+
+exit(1); // sorry, dude :(

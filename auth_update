@@ -36,3 +36,11 @@ foreach($p_files as $file) {
 file_put_contents($wiki_users, $ret);
 
 system("cat $wiki_users | cut -d: -f1-2 > $repo_dir/.htpasswd");
+
+$f=fopen("$repo_dir/.htgroup", "w");
+$link=mysql_connect($mysql['host'], $mysql['user'], $mysql['passwd']);
+$res=mysql_query("select 'group' || nid, group_concat(users.name separator ' ') from og_uid left join users on og_uid.uid=users.uid group by nid");
+while($elem=mysql_fetch_row($res)) {
+  fwrite($f, "$elem[0]:$elem[1]\n");
+}
+fclose($f);

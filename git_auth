@@ -1,0 +1,21 @@
+#!/usr/bin/php
+<?
+/*
+  Add this line to the VirtualHost-Directive in apache-config:
+  # DefineExternalAuth cg2 pipe /home/cg2/bin/git_auth
+
+  Create a .htaccess file in root of git-repos:
+  # AuthType Basic
+  # AuthName "Git"
+  # AuthBasicProvider external
+  # AuthExternal cg2
+  # Require valid-user
+*/
+
+// Read user/pass from stdin
+$stdin=fopen("php://stdin", "r");
+$user=trim(fgets($stdin));
+$pass=trim(fgets($stdin));
+fclose($stdin);
+
+exit(1); // no access

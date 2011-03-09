@@ -18,6 +18,16 @@ function _git_repo_create($id) {
   // Create repo
   system("git init --bare");
 
+  // Create .htaccess-file
+  $f=fopen("$path/.htaccess", "w");
+  fprintf($f, "AuthType Basic\n");
+  fprintf($f, "AuthName \"Group $id\"\n");
+  fprintf($f, "AuthBasicProvider external\n");
+  fprintf($f, "AuthExternal cg2\n");
+  fprintf($f, "GroupExternal cg2\n");
+  fprintf($f, "Require group og_$id tutor\n");
+  fclose($f);
+
   // Say something
   $t_args=array("%id"=>$id);
   drupal_set_message(t('Git Repository %id has been created.', $t_args));

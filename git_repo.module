@@ -3,7 +3,7 @@
 
 function _git_repo_create($id) {
   // Calculate path
-  $path="/home/cg2/htdocs/data/$id";
+  $path="/home/cg2/htdocs/git/$id";
 
   // Create path
   if(!mkdir($path)) {

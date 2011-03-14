@@ -1,7 +1,7 @@
 <?php
 // $Id$
 
-function _git_repo_create($id) {
+function _git_repo_create($id, $title) {
   // Calculate path
   $path="/home/cg2/htdocs/git/$id";
 
@@ -18,6 +18,11 @@ function _git_repo_create($id) {
   // Create repo
   system("git init --bare");
   system("git update-server-info");
+
+  // Set Repo-Information
+  $f=fopen("description", "w");
+  fprintf($f, $title);
+  fclose($f);
 
   // Create .htaccess-file
   $f=fopen("$path/.htaccess", "w");
@@ -46,5 +51,5 @@ function git_repo_nodeapi($node, $op) {
   }
 
   // Do the work
-  _git_repo_create($node->nid);
+  _git_repo_create($node->nid, $node->title);
 }

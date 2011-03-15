@@ -39,12 +39,7 @@ function _git_repo_create($id, $title) {
   drupal_set_message(t('Git Repository %id has been created.', $t_args));
 }
 
-function git_repo_nodeapi($node, $op) {
-  // Only on insert
-  if($op!="insert") {
-    return;
-  }
-
+function git_repo_node_insert($node) {
   // Only when content type is group
   if($node->type!="group") {
     return;

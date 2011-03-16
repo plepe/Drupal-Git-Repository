@@ -1,6 +1,27 @@
 <?php
 // $Id$
 
+function git_repo_admin() {
+  $form = array();
+
+  return system_settings_form($form);
+}
+
+function git_repo_menu() {
+  $items = array();
+
+  $items['admin/structure/git_repo'] = array(
+    'title' => 'Git Repository',
+    'description' => 'Configures the Git Repository module',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('git_repo_admin'),
+    'access arguments' => array('access administration pages'),
+    'type' => MENU_NORMAL_ITEM,
+  );
+
+  return $items;
+}
+
 function _git_repo_create($id, $title) {
   // Calculate path
   $path="/home/cg2/htdocs/git/$id";

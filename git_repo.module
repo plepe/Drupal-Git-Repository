@@ -40,44 +40,69 @@ function git_repo_menu() {
   return $items;
 }
 
-function _git_repo_create($id, $title) {
+function _git_repo_path($id) {
   // Get Base Path of Git Repos
-  $git_repo_base_path=variable_get('git_repo_base_path');
+  $git_repo_base_path = variable_get('git_repo_base_path');
   if(!$git_repo_base_path) {
     drupal_set_message("Git Repo: \$git_repo_base_path not set");
-    return;
+    return false;
   }
 
   // Check validity of Base Path
   if(!is_dir($git_repo_base_path)) {
     drupal_set_message("Git Repo: Base Path '$git_repo_base_path' does not exist", "error");
-    return;
+    return false;
   }
   if(!is_writeable($git_repo_base_path)) {
     drupal_set_message("Git Repo: Base Path '$git_repo_base_path' is not writeable", "error");
-    return;
+    return false;
   }
 
   // Calculate path
-  $path="$git_repo_base_path/$id";
+  return "$git_repo_base_path/$id";
+}
+
+function _git_repo_exists($id) {
+  $path = _git_repo_path($id);
+
+  if(!is_dir($path))
+    return false;
+
+  return true;
+}
+
+function _git_repo_create($id) {
+  if(!($path=_git_repo_path($id)))
+    return false;
 
   // Create path
   if(!mkdir($path)) {
-    return;
+    return false;
   }
 
   // Change to path
   if(!chdir($path)) {
-    return;
+    return false;
   }
 
   // Create repo
   system("git init --bare");
   system("git update-server-info");
 
+  // Say something
+  $t_args=array("%id"=>$id);
+  drupal_set_message(t('Git Repository %id has been created.', $t_args));
+
+  return true;
+}
+
+function _git_repo_update($id, $node) {
+  if(!($path=_git_repo_path($id)))
+    return false;
+
   // Set Repo-Information
-  $f=fopen("description", "w");
-  fprintf($f, $title);
+  $f=fopen("$path/description", "w");
+  fprintf($f, $node->title);
   fclose($f);
 
   // Create .htaccess-file
@@ -92,16 +117,29 @@ function _git_repo_create($id, $title) {
 
   // Say something
   $t_args=array("%id"=>$id);
-  drupal_set_message(t('Git Repository %id has been created.', $t_args));
+  drupal_set_message(t('Git Repository %id has been updated.', $t_args));
 }
 
-function git_repo_node_insert($node) {
+function _git_repo_check($node) {
   $git_repo_content_type=variable_get('git_repo_content_type', array());
   // Only when content type is linked to a git repo
   if(!$git_repo_content_type[$node->type]) {
     return;
   }
 
-  // Do the work
-  _git_repo_create($node->nid, $node->title);
+  // Create repo if it doesn't exist
+  if(!_git_repo_exists($node->nid)) {
+    _git_repo_create($node->nid);
+  }
+
+  // Update settings
+  _git_repo_update($node->nid, $node);
+}
+
+function git_repo_node_insert($node) {
+  _git_repo_check($node);
+}
+
+function git_repo_node_update($node) {
+  _git_repo_check($node);
 }

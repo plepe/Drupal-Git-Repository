@@ -4,6 +4,14 @@
 function git_repo_admin() {
   $form = array();
 
+  $form['git_repo_base_path'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Base Path'),
+    '#default_value' => variable_get('git_repo_base_path'),
+    '#description' => t('Please provide a (web server writeable) directory, where the git repositories will be created'),
+    '#required' => true,
+  );
+
   return system_settings_form($form);
 }
 
@@ -23,8 +31,25 @@ function git_repo_menu() {
 }
 
 function _git_repo_create($id, $title) {
+  // Get Base Path of Git Repos
+  $git_repo_base_path=variable_get('git_repo_base_path');
+  if(!$git_repo_base_path) {
+    drupal_set_message("Git Repo: \$git_repo_base_path not set");
+    return;
+  }
+
+  // Check validity of Base Path
+  if(!is_dir($git_repo_base_path)) {
+    drupal_set_message("Git Repo: Base Path '$git_repo_base_path' does not exist", "error");
+    return;
+  }
+  if(!is_writeable($git_repo_base_path)) {
+    drupal_set_message("Git Repo: Base Path '$git_repo_base_path' is not writeable", "error");
+    return;
+  }
+
   // Calculate path
-  $path="/home/cg2/htdocs/git/$id";
+  $path="$git_repo_base_path/$id";
 
   // Create path
   if(!mkdir($path)) {

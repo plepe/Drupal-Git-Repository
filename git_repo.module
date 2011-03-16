@@ -4,6 +4,16 @@
 function git_repo_admin() {
   $form = array();
 
+  $types = node_type_get_names();
+  $form['git_repo_content_type'] = array(
+    '#options' => $types,
+    '#type' => 'checkboxes',
+    '#title' => t('Content-Types'),
+    '#default_value' => variable_get('git_repo_content_type', array()),
+    '#description' => t('Which content type(s) should be linked to a Git Repository?'),
+    '#required' => false,
+  );
+
   $form['git_repo_base_path'] = array(
     '#type' => 'textfield',
     '#title' => t('Base Path'),
@@ -86,8 +96,9 @@ function _git_repo_create($id, $title) {
 }
 
 function git_repo_node_insert($node) {
-  // Only when content type is group
-  if($node->type!="group") {
+  $git_repo_content_type=variable_get('git_repo_content_type', array());
+  // Only when content type is linked to a git repo
+  if(!$git_repo_content_type[$node->type]) {
     return;
   }
 

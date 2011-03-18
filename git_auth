@@ -1,38 +1,55 @@
 #!/usr/bin/php
 <?
 /*
+  Install mod_auth_external:
+  # apt-get install libapache2-mod-authnz-external
+
   Add this line to the VirtualHost-Directive in apache-config:
-  # DefineExternalAuth cg2 pipe /home/cg2/bin/git_auth
+  # DefineExternalAuth git_repo pipe DRUPAL_ROOT/modules/git_repo/git_auth
 
   Create a .htaccess file in root of git-repos:
   # AuthType Basic
   # AuthName "Git"
   # AuthBasicProvider external
-  # AuthExternal cg2
+  # AuthExternal git_repo
   # Require valid-user
 */
 
-// Config
-include_once "/home/cg2/htdocs/conf.php";
+// Set cwd to DRUPAL_ROOT, set variables
+$p=explode("/", $_SERVER['PHP_SELF']);
+chdir(implode("/", array_slice($p, 0, sizeof($p)-3)));
+define('DRUPAL_ROOT', getcwd());
+$_SERVER['REMOTE_ADDR']="0.0.0.0";
 
-// Connect to database
-$link=mysql_connect($mysql['host'], $mysql['user'], $mysql['passwd']);
-mysql_select_db($mysql['db']);
+//the Drupal root, relative to the directory of the path
+require_once './includes/bootstrap.inc';
+drupal_bootstrap(DRUPAL_BOOTSTRAP_FULL);
+fwrite($f, "here\n");
 
 // Read user/pass from stdin
 $stdin=fopen("php://stdin", "r");
-$user=trim(fgets($stdin));
+$name=trim(fgets($stdin));
 $pass=trim(fgets($stdin));
 fclose($stdin);
 
-// Check password to drupal-database
-$res=mysql_query("select * from users where name='$user'");
-if(!($elem=mysql_fetch_assoc($res))) {
-  exit(1);
+// Call all authenticate hooks
+$auth=module_invoke_all("authenticate", $name, $pass);
+foreach($auth as $a) {
+  if($a)
+    $user=$a;
 }
 
-// Check if password is correct
-if(md5($pass)!=$elem['pass']) {
+// No user? Exit with error code 1 ...
+if((!$user)||($user==""))
+  exit(1);
+
+// Load user
+if(is_string($user)) {
+  $user=user_load($user);
+}
+
+// No anonymous!
+if($user->uid==0) {
   exit(1);
 }
 

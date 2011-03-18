@@ -22,6 +22,14 @@ function git_repo_admin() {
     '#required' => true,
   );
 
+  $form['git_repo_www_path'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Web Path'),
+    '#default_value' => variable_get('git_repo_www_path'),
+    '#description' => t('Please enter the full Web Path to the Git Repositories (e.g. "https://www.example.com/git/")'),
+    '#required' => false,
+  );
+
   return system_settings_form($form);
 }
 
@@ -142,4 +150,21 @@ function git_repo_node_insert($node) {
 
 function git_repo_node_update($node) {
   _git_repo_check($node);
+}
+
+function git_repo_node_view($node) {
+  $git_repo_content_type=variable_get('git_repo_content_type', array());
+  // Only when content type is linked to a git repo
+  if(!$git_repo_content_type[$node->type]) {
+    return;
+  }
+
+  $git_repo_www_path=variable_get('git_repo_www_path', 0);
+
+  if($git_repo_www_path) {
+    $node->content['git_repo'] = array(
+      '#markup' => t("Git Repository URL:")." {$git_repo_www_path}{$node->nid}",
+      '#weight' => 10, 
+    );
+  }
 }

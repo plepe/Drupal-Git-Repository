@@ -30,6 +30,23 @@ function git_repo_admin() {
     '#required' => false,
   );
 
+  // Configure ID Field
+  $field_list=array(0=>"use ID of node");
+  foreach(field_info_fields() as $fid=>$data) {
+    if(($data['type']=="text")&&($data['cardinality']==1)) {
+      $field_list[$fid]=$fid;
+    }
+  }
+
+  $form['git_repo_id_field'] = array(
+    '#type' => 'radios',
+    '#options' => $field_list,
+    '#title' => t('ID Field'),
+    '#default_value' => variable_get('git_repo_id_field'),
+    '#description' => t('Please specify a field, where the ID of the Repository is set (per default the numeric ID of the node is used). The field should be of type "text" with a cardinality of 1.'),
+    '#required' => false,
+  );
+
   return system_settings_form($form);
 }
 
@@ -128,6 +145,21 @@ function _git_repo_update($id, $node) {
   drupal_set_message(t('Git Repository %id has been updated.', $t_args));
 }
 
+function _git_repo_id($node) {
+  // Check ID Field
+  if($git_repo_id_field=variable_get("git_repo_id_field")) {
+    $field=$node->$git_repo_id_field;
+    if(!sizeof($field))
+      return $node->nid;
+
+    if($id=$field['und'][0]['value'])
+      return $id;
+  }
+
+  // Use ID of node
+  return $node->nid;
+}
+
 function _git_repo_check($node) {
   $git_repo_content_type=variable_get('git_repo_content_type', array());
   // Only when content type is linked to a git repo
@@ -135,13 +167,16 @@ function _git_repo_check($node) {
     return;
   }
 
+  // Get Repo ID
+  $id=_git_repo_id($node);
+
   // Create repo if it doesn't exist
-  if(!_git_repo_exists($node->nid)) {
-    _git_repo_create($node->nid);
+  if(!_git_repo_exists($id)) {
+    _git_repo_create($id);
   }
 
   // Update settings
-  _git_repo_update($node->nid, $node);
+  _git_repo_update($id, $node);
 }
 
 function git_repo_node_insert($node) {
@@ -161,9 +196,12 @@ function git_repo_node_view($node) {
 
   $git_repo_www_path=variable_get('git_repo_www_path', 0);
 
+  // Get Repo ID
+  $id=_git_repo_id($node);
+
   if($git_repo_www_path) {
     $node->content['git_repo'] = array(
-      '#markup' => t("Git Repository URL:")." {$git_repo_www_path}{$node->nid}",
+      '#markup' => t("Git Repository URL:")." {$git_repo_www_path}{$id}",
       '#weight' => 10, 
     );
   }

@@ -24,7 +24,6 @@ $_SERVER['REMOTE_ADDR']="0.0.0.0";
 //the Drupal root, relative to the directory of the path
 require_once './includes/bootstrap.inc';
 drupal_bootstrap(DRUPAL_BOOTSTRAP_FULL);
-fwrite($f, "here\n");
 
 // Read user/pass from stdin
 $stdin=fopen("php://stdin", "r");

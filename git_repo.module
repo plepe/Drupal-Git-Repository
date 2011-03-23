@@ -133,11 +133,11 @@ function _git_repo_update($id, $node) {
   // Create .htaccess-file
   $f=fopen("$path/.htaccess", "w");
   fprintf($f, "AuthType Basic\n");
-  fprintf($f, "AuthName \"Group $id\"\n");
+  fprintf($f, "AuthName \"{$node->title}\"\n");
   fprintf($f, "AuthBasicProvider external\n");
-  fprintf($f, "AuthExternal cg2\n");
-  fprintf($f, "GroupExternal cg2\n");
-  fprintf($f, "Require group og_$id tutor\n");
+  fprintf($f, "AuthExternal git_repo\n");
+  fprintf($f, "GroupExternal git_repo\n");
+  fprintf($f, "Require group {$node->nid}\n");
   fclose($f);
 
   // Say something

@@ -2,42 +2,32 @@
 <?
 /*
   Add this line to the VirtualHost-Directive in apache-config:
-  # DefineExternalGroup cg2 pipe /home/cg2/bin/git_group
-
-  Create a .htaccess file in a git-repo:
-  # AuthType Basic
-  # AuthName "Group 22"
-  # AuthBasicProvider external
-  # AuthExternal cg2
-  # GroupExternal cg2
-  # Require group og_1234 tutor
+  # DefineExternalGroup git_repo pipe DRUPAL_ROOT/modules/git_repo/git_group
 */
 
-// Config
-include_once "/home/cg2/htdocs/conf.php";
+// Set cwd to DRUPAL_ROOT, set variables
+$p=explode("/", $_SERVER['PHP_SELF']);
+chdir(implode("/", array_slice($p, 0, sizeof($p)-3)));
+define('DRUPAL_ROOT', getcwd());
+$_SERVER['REMOTE_ADDR']="0.0.0.0";
 
-// Connect to database
-$link=mysql_connect($mysql['host'], $mysql['user'], $mysql['passwd']);
-mysql_select_db($mysql['db']);
+//the Drupal root, relative to the directory of the path
+require_once './includes/bootstrap.inc';
+drupal_bootstrap(DRUPAL_BOOTSTRAP_FULL);
 
-// Read user/required groups from stdin
+// Read user and id of accessed node from stdin
 $stdin=fopen("php://stdin", "r");
 $user=trim(fgets($stdin));
-$groups=explode(" ", trim(fgets($stdin)));
+$nid=trim(fgets($stdin));
 fclose($stdin);
 
-// Check if we are in matching organic group
-$res=mysql_query("select concat('og_', og_uid.nid) as name from users left join og_uid on users.uid=og_uid.uid where name='$user'");
-while($elem=mysql_fetch_assoc($res)) {
-  if(in_array($elem['name'], $groups))
-    exit(0);
-}
+// Load user and node
+$user=user_load($user);
+$node=node_load($nid);
 
-// Check if we have matching role
-$res=mysql_query("select role.name from users join users_roles on users.uid=users_roles.uid join role on users_roles.rid=role.rid where users.name='$user'");
-while($elem=mysql_fetch_assoc($res)) {
-  if(in_array($elem['name'], $groups))
-    exit(0);
+// check access
+if(node_access('view', $node, $user)) {
+  exit(0); // access granted
 }
 
 exit(1); // sorry, dude :(

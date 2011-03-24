@@ -18,15 +18,20 @@ drupal_bootstrap(DRUPAL_BOOTSTRAP_FULL);
 // Read user and id of accessed node from stdin
 $stdin=fopen("php://stdin", "r");
 $user=trim(fgets($stdin));
-$nid=trim(fgets($stdin));
+$access=trim(fgets($stdin));
 fclose($stdin);
+
+// Access is of form 'type:nid', e.g. 'view:25'
+$access=explode(":", $access);
+$nid=$access[1];
+$access=$access[0];
 
 // Load user and node
 $user=user_load($user);
 $node=node_load($nid);
 
 // check access
-if(node_access('view', $node, $user)) {
+if(node_access($access, $node, $user)) {
   exit(0); // access granted
 }
 

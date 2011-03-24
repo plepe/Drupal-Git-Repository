@@ -28,3 +28,12 @@ Add the following lines to the apache virtualhost directive:
 Replace DRUPAL_ROOT to the correct path to your drupal installation, e.g.
 /var/www
 
+4. Use memcached to speed up authentication
+-------------------------------------------
+The external scripts will be called over and over. Loading the drupal
+libraries every time to check for the user takes a lot of time. If you
+install memcached the authorization will be saved for some seconds,
+speeding up things.
+
+> apt-get install memcached php5-memcache
+> /etc/init.d/apache2 reload

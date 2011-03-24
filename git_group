@@ -11,13 +11,9 @@ chdir(implode("/", array_slice($p, 0, sizeof($p)-3)));
 define('DRUPAL_ROOT', getcwd());
 $_SERVER['REMOTE_ADDR']="0.0.0.0";
 
-//the Drupal root, relative to the directory of the path
-require_once './includes/bootstrap.inc';
-drupal_bootstrap(DRUPAL_BOOTSTRAP_FULL);
-
 // Read user and id of accessed node from stdin
 $stdin=fopen("php://stdin", "r");
-$user=trim(fgets($stdin));
+$name=trim(fgets($stdin));
 $access=trim(fgets($stdin));
 fclose($stdin);
 
@@ -26,13 +22,27 @@ $access=explode(":", $access);
 $nid=$access[1];
 $access=$access[0];
 
+// Maybe we can ask cache?
+include_once "cache.php";
+if(($auth=_git_repo_cache_get(md5("group|$name|$access|$nid")))!==null) {
+  exit($auth);
+}
+
+//the Drupal root, relative to the directory of the path
+require_once './includes/bootstrap.inc';
+drupal_bootstrap(DRUPAL_BOOTSTRAP_FULL);
+
 // Load user and node
-$user=user_load($user);
+$user=user_load($name);
 $node=node_load($nid);
 
 // check access
+$auth=1; // sorry, dude :(
 if(node_access($access, $node, $user)) {
-  exit(0); // access granted
+  $auth=0; // access granted
 }
 
-exit(1); // sorry, dude :(
+// save auth for later use
+_git_repo_cache_set(md5("group|$name|$access|$nid"), $auth);
+
+exit($auth);

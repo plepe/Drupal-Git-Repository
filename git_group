@@ -33,7 +33,7 @@ require_once './includes/bootstrap.inc';
 drupal_bootstrap(DRUPAL_BOOTSTRAP_FULL);
 
 // Load user and node
-$user=user_load($name);
+$user=user_load_by_name($name);
 $node=node_load($nid);
 
 // check access

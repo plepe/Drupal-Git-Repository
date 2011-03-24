@@ -138,10 +138,10 @@ function _git_repo_update($id, $node) {
   fprintf($f, "AuthExternal git_repo\n");
   fprintf($f, "GroupExternal git_repo\n");
   fprintf($f, "GroupExternalError 403\n");
-  fprintf($f, "<LimitExcept GET PROPFIND HEAD OPTIONS REPORT>\n");
-  fprintf($f, "  Require group update:{$node->nid}\n");
-  fprintf($f, "</LimitExcept>\n");
-  fprintf($f, "Require group view:{$node->nid}\n");
+  fprintf($f, "<Limit GET PROPFIND HEAD OPTIONS REPORT>\n");
+  fprintf($f, "  Require group view:{$node->nid}\n");
+  fprintf($f, "</Limit>\n");
+  fprintf($f, "Require group update:{$node->nid}\n");
   fclose($f);
 
   // Say something
